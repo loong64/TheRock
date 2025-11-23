@@ -12,7 +12,7 @@ CCACHE_VERSION="$1"
 ARCH="$(uname -m)"
 
 curl --silent --fail --show-error --location \
-    "https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/ccache-${CCACHE_VERSION}-linux-${ARCH}.tar.xz" \
+    "https://github.com/loong64/ccache/releases/download/v${CCACHE_VERSION}/ccache-${CCACHE_VERSION}-linux-${ARCH}.tar.xz" \
     --output ccache.tar.xz
 
 tar xf ccache.tar.xz

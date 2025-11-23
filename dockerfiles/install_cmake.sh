@@ -14,9 +14,15 @@ INSTALL_PREFIX="/usr/local/therock-tools"
 
 mkdir -p "${INSTALL_PREFIX}"
 
-curl --silent --fail --show-error --location \
+if [ "${ARCH}" = "loongarch64" ]; then
+  curl --silent --fail --show-error --location \
+    "https://github.com/loong64/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${ARCH}.sh" \
+    --output cmake-installer.sh
+else
+  curl --silent --fail --show-error --location \
     "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${ARCH}.sh" \
     --output cmake-installer.sh
+fi
 
 chmod +x cmake-installer.sh
 ./cmake-installer.sh --skip-license --prefix="${INSTALL_PREFIX}"
