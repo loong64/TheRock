@@ -444,6 +444,8 @@ class FindGCC(FindProgram):
                 return "RISC-V 64"
             case "riscv32-linux-gnu":
                 return "RISC-V 32"
+            case "loongarch64-anolis-linux":
+                return "LoongArch64"
             case "mips64-linux-gnuabi64":
                 return "MIPS64"
             case "mips-linux-gnu":
@@ -489,6 +491,8 @@ class FindGXX(FindProgram):
                 return "RISC-V 64"
             case "riscv32-linux-gnu":
                 return "RISC-V 32"
+            case "loongarch64-anolis-linux":
+                return "LoongArch64"
             case "mips64-linux-gnuabi64":
                 return "MIPS64"
             case "mips-linux-gnu":
@@ -533,6 +537,8 @@ class FindGFortran(FindProgram):
                 return "RISC-V 64"
             case "riscv32-linux-gnu":
                 return "RISC-V 32"
+            case "loongarch64-anolis-linux":
+                return "LoongArch64"
             case "mips64-linux-gnuabi64":
                 return "MIPS64"
             case "mips-linux-gnu":
