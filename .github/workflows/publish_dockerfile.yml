@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ROCm/${{ inputs.DOCKER_IMAGE_NAME }}
+      IMAGE_NAME: loong64/ROCm/${{ inputs.DOCKER_IMAGE_NAME }}
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -20,6 +20,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Log in to the Container registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -65,6 +71,9 @@ jobs:
         with:
           context: dockerfiles/
           file: dockerfiles/${{ inputs.DOCKER_FILE_NAME }}.Dockerfile
+          platforms: linux/loong64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/loong64/rocm/therock_build_manylinux_loongarch64:buildcache
+          cache-to: type=registry,ref=ghcr.io/loong64/rocm/therock_build_manylinux_loongarch64:buildcache,mode=max

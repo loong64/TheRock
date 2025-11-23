@@ -10,9 +10,15 @@ set -euo pipefail
 ARCH="$(uname -m)"
 
 # https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-curl --silent --fail --show-error --location \
+if [ "${ARCH}" = "loongarch64" ]; then
+  curl --silent --fail --show-error --location \
+    "https://github.com/loong64/aws-cli/releases/latest/download/awscli-exe-linux-${ARCH}.zip" \
+    --output "awscliv2.zip"
+else
+  curl --silent --fail --show-error --location \
     "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip" \
     --output "awscliv2.zip"
+fi
 
 unzip -qq awscliv2.zip
 
