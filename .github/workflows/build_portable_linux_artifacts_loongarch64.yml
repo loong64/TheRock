@@ -1,0 +1,158 @@
+name: Build Portable Linux Artifacts - LoongArch64
+
+on:
+  workflow_dispatch:
+    inputs:
+      amdgpu_families:
+        type: string
+        default: gfx94X-dcgpu
+      artifact_group:
+        type: string
+        default: gfx94X-dcgpu
+      build_variant_label:
+        type: string
+        description: "A label for the build variant (ex: 'release', 'asan')"
+        default: "release"
+      build_variant_suffix:
+        type: string
+        description: "The build variant suffix (ex: 'asan' suffix -> 'gfx94X-dcgpu-asan')"
+        default: ""
+      build_variant_cmake_preset:
+        type: string
+        description: "The name of the cmake preset to use for this build variant, matching an entry in CMakePresets.json (ex: 'linux-release-asan')"
+        default: ""
+      package_version:
+        type: string
+        default: ADHOCBUILD
+      expect_failure:
+        type: boolean
+        default: false
+      extra_cmake_options:
+        type: string
+
+  workflow_call:
+    inputs:
+      package_version:
+        type: string
+        default: ADHOCBUILD
+      amdgpu_families:
+        type: string
+      artifact_group:
+        type: string
+      build_variant_label:
+        type: string
+      build_variant_suffix:
+        type: string
+      build_variant_cmake_preset:
+        type: string
+      expect_failure:
+        type: boolean
+      extra_cmake_options:
+        type: string
+
+# See the details regarding permissions from the link:
+# https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#oidc
+permissions:
+  contents: read
+
+jobs:
+  build_portable_linux_artifacts:
+    name: Build (xfail ${{ inputs.expect_failure }})
+    # azure-linux-scale-rocm are used for regular CI builds
+    # azure-linux-scale-rocm-heavy are used for CI builds that require more resources (ex: ASAN builds)
+    runs-on: ubuntu-24.04
+    continue-on-error: ${{ inputs.expect_failure }}
+    # timeout-minutes: 720 # 12 hour timeout
+    permissions:
+      id-token: write
+    # container:
+      # image: ghcr.io/loong64/rocm/therock_build_manylinux_loongarch64
+      # options: --platform linux/loong64
+    env:
+      # AWS_SHARED_CREDENTIALS_FILE: /home/awsconfig/credentials.ini
+      CACHE_DIR: ${{ github.workspace }}/.container-cache
+      # The ccache.conf will be written by setup_ccache.py before this gets used.
+      CCACHE_CONFIGPATH: ${{ github.workspace }}/.ccache/ccache.conf
+      AMDGPU_FAMILIES: ${{ inputs.amdgpu_families }}
+      TEATIME_FORCE_INTERACTIVE: 0
+      IS_PR_FROM_FORK: ${{ github.event.pull_request.head.repo.fork }}
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+      - name: Checkout Repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Prepare container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/loong64/rocm/therock_build_manylinux_loongarch64
+          options: --platform linux/loong64 --env RUNNER_ARCH --volume ${{ github.workspace }}:/io --workdir /io
+          shell: bash
+          run: |
+            # Clang
+            curl -sSL https://github.com/loong64/static-clang-build/raw/refs/heads/main/manylinux-install-static-clang.sh | bash
+            export CC="/opt/clang/bin/clang" CXX="/opt/clang/bin/clang++" LDFLAGS="-fuse-ld=lld"
+
+            # Install python deps
+            pip install -r requirements.txt
+
+            # safe.directory must be set before Runner Health Status
+            git config --global --add safe.directory $PWD
+            git config fetch.parallel 10
+
+            # Setup ccache
+            ./build_tools/setup_ccache.py \
+            --config-preset "github-oss-presubmit" \
+            --dir "$(dirname $CCACHE_CONFIGPATH)" \
+            --local-path "$CACHE_DIR/ccache"
+
+            # Runner health status
+            ./build_tools/health_status.py
+
+            # Test build_tools
+            python -m pytest build_tools/tests build_tools/github_actions/tests
+
+            # Fetch sources
+            ./build_tools/fetch_sources.py --jobs 12
+
+            # Configure Projects
+            cmake_preset=${{ inputs.build_variant_cmake_preset }} amdgpu_families=${{ inputs.amdgpu_families }} package_version=${{ inputs.package_version }} extra_cmake_options=${{ inputs.extra_cmake_options }} BUILD_DIR=build python3 build_tools/github_actions/build_configure.py --manylinux
+
+            # Build therock-archives and therock-dist
+            cmake --build build --target therock-archives therock-dist -- -k 0
+
+            # Test Packaging
+            ctest --test-dir build --output-on-failure
+
+            # Report
+            if [ -d "./build" ]; then
+              echo "Full SDK du:"
+              echo "------------"
+              du -h -d 1 build/dist/rocm
+              echo "Artifact Archives:"
+              echo "------------------"
+              ls -lh build/artifacts/*.tar.xz
+              echo "Artifacts:"
+              echo "----------"
+              du -h -d 1 build/artifacts
+              echo "CCache Stats:"
+              echo "-------------"
+              ccache -s -v
+              tail -v -n +1 .ccache/compiler_check_cache/* > build/logs/ccache_compiler_check_cache.log
+            else
+              echo "[ERROR] Build directory ./build does not exist. Skipping report!"
+              echo "        This should only happen if the CI is cancelled before the build step."
+              exit 1
+            fi

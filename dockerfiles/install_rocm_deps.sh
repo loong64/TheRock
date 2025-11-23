@@ -51,7 +51,7 @@ case "$DISTRO" in
         rm -rf /var/lib/apt/lists/*
         ;;
 
-    almalinux)
+    almalinux|anolis)
         echo "Installing dependencies using dnf..."
         # Fix AlmaLinux repo to use direct baseurl instead of mirrorlist
         if [ -f /etc/yum.repos.d/almalinux.repo ]; then
