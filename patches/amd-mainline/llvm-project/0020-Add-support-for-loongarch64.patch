@@ -1,0 +1,71 @@
+From 58841db4b7bc50f5a60ebe971233429191558aa9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E5=90=B4=E5=B0=8F=E7=99=BD?= <296015668@qq.com>
+Date: Sun, 11 Jan 2026 21:12:32 +0800
+Subject: [PATCH] Add loongarch64-linux support
+
+---
+ clang/lib/Driver/ToolChains/HIPUtility.cpp              | 9 +++++++++
+ clang/tools/clang-linker-wrapper/ClangLinkerWrapper.cpp | 9 +++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/clang/lib/Driver/ToolChains/HIPUtility.cpp b/clang/lib/Driver/ToolChains/HIPUtility.cpp
+index 1af2ae6470f1..148dbaa3eef9 100644
+--- a/clang/lib/Driver/ToolChains/HIPUtility.cpp
++++ b/clang/lib/Driver/ToolChains/HIPUtility.cpp
+@@ -35,7 +35,11 @@ using llvm::dyn_cast;
+ #endif
+ 
+ namespace {
++#if defined(__loongarch_lp64)
++const unsigned HIPCodeObjectAlign = 65536;
++#else
+ const unsigned HIPCodeObjectAlign = 4096;
++#endif
+ } // namespace
+ 
+ // Constructs a triple string for clang offload bundler.
+@@ -289,7 +293,12 @@ void HIP::constructHIPFatbinCommand(Compilation &C, const JobAction &JA,
+ 
+   // ToDo: Remove the dummy host binary entry which is required by
+   // clang-offload-bundler.
++#if defined(__x86_64)
+   std::string BundlerTargetArg = "-targets=host-x86_64-unknown-linux-gnu";
++#elif defined(__loongarch_lp64)
++  std::string BundlerTargetArg = "-targets=host-loongarch64-unknown-linux";
++#else
++#endif
+   // AMDGCN:
+   // For code object version 2 and 3, the offload kind in bundle ID is 'hip'
+   // for backward compatibility. For code object version 4 and greater, the
+diff --git a/clang/tools/clang-linker-wrapper/ClangLinkerWrapper.cpp b/clang/tools/clang-linker-wrapper/ClangLinkerWrapper.cpp
+index 93d748d04821..18aa31292054 100644
+--- a/clang/tools/clang-linker-wrapper/ClangLinkerWrapper.cpp
++++ b/clang/tools/clang-linker-wrapper/ClangLinkerWrapper.cpp
+@@ -432,7 +432,11 @@ fatbinary(ArrayRef<std::pair<StringRef, StringRef>> InputFiles,
+   SmallVector<StringRef, 16> CmdArgs;
+   CmdArgs.push_back(*OffloadBundlerPath);
+   CmdArgs.push_back("-type=o");
++#if defined(__loongarch64)
++  CmdArgs.push_back("-bundle-align=65536");
++#else
+   CmdArgs.push_back("-bundle-align=4096");
++#endif
+ 
+   if (Args.hasArg(OPT_compress))
+     CmdArgs.push_back("-compress");
+@@ -440,7 +444,12 @@ fatbinary(ArrayRef<std::pair<StringRef, StringRef>> InputFiles,
+     CmdArgs.push_back(
+         Args.MakeArgString(Twine("-compression-level=") + Arg->getValue()));
+ 
++#if defined(__x86_64)
+   SmallVector<StringRef> Targets = {"-targets=host-x86_64-unknown-linux-gnu"};
++#elif defined(__loongarch64)
++  SmallVector<StringRef> Targets = {"-targets=host-loongarch64-unknown-linux"};
++#else
++#endif
+   for (const auto &[File, Arch] : InputFiles) {
+     Targets.push_back(Saver.save(Arch == "amdgcnspirv"
+                                      ? "hip-spirv64-amd-amdhsa--" + Arch
+-- 
+2.47.0.windows.2
+
