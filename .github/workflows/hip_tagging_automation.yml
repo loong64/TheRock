@@ -20,12 +20,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
-        id: generate-token
-        with:
-          app-id: ${{ secrets.PULL_REQUEST_APP_ID }}
-          private-key: ${{ secrets.PULL_REQUEST_APP_KEY }}
+      # - name: Generate GitHub App token
+      #   uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+      #   id: generate-token
+      #   with:
+      #     app-id: ${{ secrets.PULL_REQUEST_APP_ID }}
+      #     private-key: ${{ secrets.PULL_REQUEST_APP_KEY }}
 
       - name: Install dependencies
         run: |
@@ -37,4 +37,4 @@ jobs:
             --repo "${{ github.repository }}" \
             --before "${{ github.event.before }}" \
             --after "${{ github.sha }}" \
-            --pat "${{ steps.generate-token.outputs.token }}"
+            --pat "${{ secrets.GH_TOKEN }}"
