@@ -1,3 +1,6 @@
+# Copyright Advanced Micro Devices, Inc.
+# SPDX-License-Identifier: MIT
+
 name: Build Portable Linux Artifacts - LoongArch64
 
 on:
@@ -11,7 +14,7 @@ on:
         default: gfx94X-dcgpu
       build_variant_label:
         type: string
-        description: "A label for the build variant (ex: 'release', 'asan')"
+        description: "A label for the build variant (ex: 'release', 'asan', 'tsan')"
         default: "release"
       build_variant_suffix:
         type: string
@@ -75,7 +78,8 @@ jobs:
       CCACHE_CONFIGPATH: ${{ github.workspace }}/.ccache/ccache.conf
       AMDGPU_FAMILIES: ${{ inputs.amdgpu_families }}
       TEATIME_FORCE_INTERACTIVE: 0
-      IS_PR_FROM_FORK: ${{ github.event.pull_request.head.repo.fork }}
+      EXTRA_C_COMPILER_LAUNCHER: "${{ github.workspace }}/build_tools/resource_info.py"
+      EXTRA_CXX_COMPILER_LAUNCHER: "${{ github.workspace }}/build_tools/resource_info.py"
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
@@ -89,10 +93,10 @@ jobs:
           swap-storage: false
 
       - name: Checkout Repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@v6
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Prepare container
         uses: addnab/docker-run-action@v3
@@ -131,7 +135,8 @@ jobs:
             cmake_preset=${{ inputs.build_variant_cmake_preset }} amdgpu_families=${{ inputs.amdgpu_families }} package_version=${{ inputs.package_version }} extra_cmake_options=${{ inputs.extra_cmake_options }} BUILD_DIR=build python3 build_tools/github_actions/build_configure.py --manylinux
 
             # Build therock-archives and therock-dist
-            cmake --build build --target therock-archives therock-dist -- -k 0
+            python build_tools/memory_monitor.py --phase Build -- \
+              cmake --build build --target therock-archives therock-dist -- -k 0
 
             # Test Packaging
             ctest --test-dir build --output-on-failure

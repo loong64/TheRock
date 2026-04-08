@@ -51,6 +51,14 @@ build_python() {
   # Extract
   tar xzf "${BUILD_ROOT}/Python-${version}.tgz" -C "${BUILD_ROOT}"
 
+  case "${version}" in
+    3.10.*|3.11.*)
+      cd "${src_dir}"
+      curl -sL https://github.com/loong64/docker-library/raw/refs/heads/main/python/Add-platform-triplets-for-64-bit-LoongArch.patch | patch -p1
+      cd -
+			;;
+  esac
+
   # Configure and build out-of-tree
   mkdir -p "${build_dir}"
   cd "${build_dir}"

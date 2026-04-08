@@ -19,7 +19,7 @@ ENV PATH="/usr/local/therock-tools/bin:/opt/python/cp312-cp312/bin:${PATH}"
 
 ######## Pip Packages ########
 ENV PIP_EXTRA_INDEX_URL="https://gitlab.com/api/v4/projects/65746188/packages/pypi/simple"
-RUN pip install --upgrade pip setuptools==69.1.1 wheel==0.42.0 && \
+RUN pip install --upgrade pip setuptools==69.1.1 wheel==0.46.2 && \
 pip install CppHeaderParser==2.7.4 meson==1.7.0 tomli==2.2.1 PyYAML==6.0.2
 
 ######## Repo ########
@@ -57,6 +57,12 @@ RUN ./install_googletest.sh "${GOOGLE_TEST_VERSION}" && rm -rf /install-googlete
 # We are pinning to gcc-toolset-12 until it is safe to upgrade. The latest
 # manylinux containers use gcc-toolset-14 or later, which is not yet compatible
 # with the LLVM that ROCm builds. This can be upgraded when clang-21 is used.
+#
+# We allow development tools in this list but not development packages (so that
+# things can't acceidentally build with system dependencies).
+#
+# Development tool dependencies:
+#   texinfo, flag: rocprofiler-systems
 RUN yum install -y \
       gcc-toolset-14-binutils \
       gcc-toolset-14-gcc \
@@ -69,17 +75,10 @@ RUN yum install -y \
       git-lfs \
     && yum install -y \
       texinfo \
-      texinfo-tex \
       flex \
     && yum clean all && \
     rm -rf /var/cache/yum
 
-######## Yum Packages for rocprofiler-systems #######
-# Additional packages required for rocprofiler-systems to build
-RUN yum install -y \
-      texinfo \
-    && yum clean all && \
-    rm -rf /var/cache/yum
 
 ######## DVC via pip ######
 # dvc's rpm package includes .so dependencies built against glib 2.29
@@ -87,6 +86,9 @@ RUN yum install -y \
 # more dvc features may be used in upcoming sequenced builds
 # Also pinning pathspec because a new version of it breaks the private _DIR_MARK
 # API that dvc uses. When upgrading past ~3.64.0, then pin can likely be removed.
+#
+# Note: dvc[s3] version locking currently limits boto3>=1.41.0,<1.42.0
+#       in requirements.txt
 RUN pip install 'pathspec<0.13.0' 'dvc[s3]==3.62.0' && \
     which dvc && dvc --version || true
 
@@ -108,6 +110,13 @@ ENV LD_LIBRARY_PATH="/opt/rh/gcc-toolset-14/root/usr/lib64:/opt/rh/gcc-toolset-1
 RUN which gcc && gcc --version && \
     which g++ && g++ --version && \
     which clang++ || true
+
+######## Shared Python Interpreters ########
+# Build Python with --enable-shared for embedding (e.g., rocgdb).
+# The manylinux /opt/python builds are statically linked and can't be embedded.
+WORKDIR /install-shared-pythons
+COPY install_shared_pythons.sh ./
+RUN ./install_shared_pythons.sh /tmp/python-build && rm -rf /install-shared-pythons /tmp/python-build
 
 ######## GIT CONFIGURATION ########
 # Git started enforcing strict user checking, which thwarts version

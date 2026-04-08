@@ -19,7 +19,7 @@ ENV PATH="/usr/local/therock-tools/bin:/opt/python/cp312-cp312/bin:${PATH}"
 
 ######## Pip Packages ########
 ENV PIP_EXTRA_INDEX_URL="https://gitlab.com/api/v4/projects/65746188/packages/pypi/simple"
-RUN pip install --upgrade pip setuptools==69.1.1 wheel==0.42.0 && \
+RUN pip install --upgrade pip setuptools==69.1.1 wheel==0.46.2 && \
 pip install CppHeaderParser==2.7.4 meson==1.7.0 tomli==2.2.1 PyYAML==6.0.2
 
 ######## Repo ########
