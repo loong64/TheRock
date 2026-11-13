@@ -1,0 +1,14 @@
+diff --git a/cmake/config.guess b/cmake/config.guess
+index 9da67244a..a703db941 100755
+--- a/cmake/config.guess
++++ b/cmake/config.guess
+@@ -863,6 +863,9 @@ EOF
+     i*86:Minix:*:*)
+ 	echo ${UNAME_MACHINE}-pc-minix
+ 	exit ;;
++    loongarch64:Linux:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
+     aarch64*:Linux:*)
+ 	    echo ${UNAME_MACHINE}-unknown-linux-gnu
+ 	exit ;;

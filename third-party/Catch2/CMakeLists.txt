@@ -8,6 +8,13 @@ therock_subproject_fetch(therock-catch2-sources
   URL_HASH SHA256=18b3f70ac80fccc340d8c6ff0f339b2ae64944782f8d2fca2bd705cf47cadb79
 )
 
+# Keep exception tables with their functions when GCC objects are linked by
+# LLD on loongarch64.
+set(_catch2_arch_args)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+  list(APPEND _catch2_arch_args "-DCMAKE_CXX_FLAGS=-ffunction-sections -fdata-sections")
+endif()
+
 therock_cmake_subproject_declare(therock-catch2
   USE_DIST_AMDGPU_TARGETS
   BACKGROUND_BUILD
@@ -15,6 +22,8 @@ therock_cmake_subproject_declare(therock-catch2
   NO_MERGE_COMPILE_COMMANDS
   OUTPUT_ON_FAILURE
   EXTERNAL_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/source"
+  CMAKE_ARGS
+    ${_catch2_arch_args}
 )
 therock_cmake_subproject_provide_package(therock-catch2 Catch2 lib/cmake)
 therock_cmake_subproject_activate(therock-catch2)

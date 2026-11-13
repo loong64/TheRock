@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?B?5ZC05bCP55m9?= <296015668@qq.com>
+Date: Fri, 13 Nov 2026 20:28:47 +0800
+Subject: [PATCH] rocjitsu: support dup2 on loongarch64
+
+---
+diff --git a/emulation/rocjitsu/lib/rocjitsu/src/rocjitsu/kmd/linux/interposer.cpp b/emulation/rocjitsu/lib/rocjitsu/src/rocjitsu/kmd/linux/interposer.cpp
+index 5b0840f61f2..c10d77fca03 100644
+--- a/emulation/rocjitsu/lib/rocjitsu/src/rocjitsu/kmd/linux/interposer.cpp
++++ b/emulation/rocjitsu/lib/rocjitsu/src/rocjitsu/kmd/linux/interposer.cpp
+@@ -5392,7 +5392,14 @@ RJ_INTERPOSER_EXPORT int dup2(int oldfd, int newfd) {
+   if (!rj_owns_interposer_state()) {
+     if (rj_child_refuses_fd(oldfd))
+       return -1;
++#ifdef SYS_dup2
+     return static_cast<int>(syscall(SYS_dup2, oldfd, newfd));
++#else
++    // dup3 rejects equal descriptors; dup2 validates and returns the descriptor.
++    if (oldfd == newfd)
++      return syscall(SYS_fcntl, oldfd, F_GETFD) < 0 ? -1 : oldfd;
++    return static_cast<int>(syscall(SYS_dup3, oldfd, newfd, 0));
++#endif
+   }
+   // dup2(fd, fd) is a POSIX no-op that leaves the descriptor live; mutating
+   // tracking would drop a still-open ref. Forward without touching tracking.

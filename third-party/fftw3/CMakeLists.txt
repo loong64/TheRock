@@ -36,6 +36,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
       # Originally mirrored from: https://fftw.org/fftw-3.3.10.tar.gz
       URL https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/fftw-3.3.10.tar.gz
       URL_HASH SHA256=56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467
+      PATCH_COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build_tools/patch_third_party_source.py ${CMAKE_SOURCE_DIR}/patches/third-party/fftw3
       TOUCH "${_download_stamp}"
       # Preserve extracted timestamps. Otherwise make treats the autotools
       # inputs as newer than configure and tries to regenerate them.

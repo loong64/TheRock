@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?B?5ZC05bCP55m9?= <296015668@qq.com>
+Date: Fri, 13 Nov 2026 20:28:47 +0800
+Subject: [PATCH] kpack: support loongarch64
+
+---
+diff --git a/shared/kpack/python/rocm_kpack/elf/types.py b/shared/kpack/python/rocm_kpack/elf/types.py
+index 0703237dcd7..d592c711cc8 100644
+--- a/shared/kpack/python/rocm_kpack/elf/types.py
++++ b/shared/kpack/python/rocm_kpack/elf/types.py
+@@ -23,6 +23,7 @@ ELF_MAGIC = b"\x7fELF"
+ EM_X86_64 = 62
+ EM_PPC64 = 21
+ EM_RISCV = 243
++EM_LOONGARCH = 258
+ 
+ # ELF header offsets (for direct byte access)
+ E_IDENT_OFFSET = 0
+@@ -111,6 +112,9 @@ R_PPC64_RELATIVE = 22  # Used for PIE/shared library pointer adjustments
+ # Relocation types (riscv64)
+ R_RISCV_RELATIVE = 3  # Used for PIE/shared library pointer adjustments
+ 
++# Relocation types (loongarch64)
++R_LARCH_RELATIVE = 3
++
+ # Dynamic section tags (d_tag)
+ DT_NULL = 0
+ DT_NEEDED = 1
+@@ -587,6 +591,7 @@ _ARCH_CONFIGS: dict[int, ArchConfig] = {
+     EM_X86_64: ArchConfig(page_size=0x1000, r_relative=R_X86_64_RELATIVE),
+     EM_PPC64: ArchConfig(page_size=0x10000, r_relative=R_PPC64_RELATIVE),
+     EM_RISCV: ArchConfig(page_size=0x1000, r_relative=R_RISCV_RELATIVE),
++    EM_LOONGARCH: ArchConfig(page_size=0x10000, r_relative=R_LARCH_RELATIVE),
+ }
+ 
+ 
+diff --git a/shared/kpack/tests/elf/test_types.py b/shared/kpack/tests/elf/test_types.py
+index f9cc138ebb0..8af9dd0cd0c 100644
+--- a/shared/kpack/tests/elf/test_types.py
++++ b/shared/kpack/tests/elf/test_types.py
+@@ -10,6 +10,8 @@ from rocm_kpack.elf.types import (
+     R_X86_64_64,
+     EM_X86_64,
+     EM_RISCV,
++    EM_LOONGARCH,
++    R_LARCH_RELATIVE,
+     R_RISCV_RELATIVE,
+ )
+ 
+@@ -138,6 +140,18 @@ class TestArchConfig:
+         assert config.page_size == 0x1000
+         assert config.r_relative == R_RISCV_RELATIVE
+ 
++    def test_loongarch64_config(self):
++        config = get_arch_config(EM_LOONGARCH)
++        assert EM_LOONGARCH == 258
++        assert config.page_size == 0x10000
++        assert config.r_relative == R_LARCH_RELATIVE == 3
++        rela = RelaEntry(
++            r_offset=0x1000,
++            r_info=RelaEntry.make_info(sym=0, type_=R_LARCH_RELATIVE),
++            r_addend=0x5000,
++        )
++        assert rela.targets_range(0x5000, 0x1000, r_relative=config.r_relative)
++
+     def test_riscv64_relative_relocation_target(self):
+         """A riscv64 RELATIVE reloc resolves via the riscv64 arch config."""
+         r_relative = get_arch_config(EM_RISCV).r_relative

@@ -10,9 +10,14 @@ set -euo pipefail
 CCACHE_VERSION="$1"
 
 ARCH="$(uname -m)"
+CCACHE_REPO="ccache/ccache"
 case "${CCACHE_VERSION}:${ARCH}" in
     4.12.1:x86_64)
         CCACHE_SHA256="742e6a6e17c0a060046874eece2949b221c228e1119698a4c6e0b096cbc87152"
+        ;;
+    4.12.1:loongarch64)
+        CCACHE_SHA256="75f7c12cbee8b66ab8c1dee1a515966b112c982a10e53f63701dd458dd2e9995"
+        CCACHE_REPO="loong64/ccache"
         ;;
     *)
         echo "Unsupported ccache version/architecture: ${CCACHE_VERSION}/${ARCH}" >&2
@@ -22,7 +27,7 @@ esac
 
 CCACHE_ARCHIVE="ccache-${CCACHE_VERSION}-linux-${ARCH}.tar.xz"
 curl --silent --fail --show-error --location \
-    "https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/${CCACHE_ARCHIVE}" \
+    "https://github.com/${CCACHE_REPO}/releases/download/v${CCACHE_VERSION}/${CCACHE_ARCHIVE}" \
     --output "${CCACHE_ARCHIVE}"
 
 printf '%s  %s\n' "${CCACHE_SHA256}" "${CCACHE_ARCHIVE}" | sha256sum --check --strict

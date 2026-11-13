@@ -11,6 +11,7 @@ CMAKE_VERSION="$1"
 
 ARCH="$(uname -m)"
 INSTALL_PREFIX="/usr/local/therock-tools"
+CMAKE_REPO="Kitware/CMake"
 case "${CMAKE_VERSION}:${ARCH}" in
     3.27.9:x86_64)
         CMAKE_SHA256="341c415b98abeebc0a31903dc65d4ad2eba1e897fea7ed723a8d6066cc7a21ae"
@@ -24,6 +25,10 @@ case "${CMAKE_VERSION}:${ARCH}" in
     3.31.12:aarch64)
         CMAKE_SHA256="846017cab38b185fd5050e1c09e081d71e92e517898521dd5b5483c987720074"
         ;;
+    3.31.12:loongarch64)
+        CMAKE_SHA256="db9687d448219142f70d87534f2204d2ec002b00a875e4a355239718dba5c051"
+        CMAKE_REPO="loong64/cmake"
+        ;;
     *)
         echo "Unsupported CMake version/architecture: ${CMAKE_VERSION}/${ARCH}" >&2
         exit 1
@@ -34,7 +39,7 @@ mkdir -p "${INSTALL_PREFIX}"
 
 INSTALLER="cmake-installer.sh"
 curl --silent --fail --show-error --location \
-    "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${ARCH}.sh" \
+    "https://github.com/${CMAKE_REPO}/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${ARCH}.sh" \
     --output "${INSTALLER}"
 
 printf '%s  %s\n' "${CMAKE_SHA256}" "${INSTALLER}" | sha256sum --check --strict

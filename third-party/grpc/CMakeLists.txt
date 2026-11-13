@@ -16,6 +16,7 @@ therock_subproject_fetch(therock-grpc-sources
   # Originally mirrored from: https://github.com/grpc/grpc.git
   URL "https://rocm-third-party-deps.s3.us-east-2.amazonaws.com/grpc-v1.78.1.tar.gz"
   URL_HASH "SHA256=96e1d4c82735a6867b9045d782d3f4f7477224496fec5386ca3adae1f2059796"
+  PATCH_COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build_tools/patch_third_party_source.py ${CMAKE_SOURCE_DIR}/patches/third-party/grpc
 )
 
 set(_binary_dir "${CMAKE_CURRENT_BINARY_DIR}/build")

@@ -58,6 +58,7 @@ jobs:
     name: Copy Prebuilt Stages
     if: >-
       ${{
+        github.repository_owner == 'ROCm' &&
         fromJSON(inputs.build_config).build_rocm == true &&
         fromJSON(inputs.build_config).prebuilt_stages != '' &&
         fromJSON(inputs.build_config).baseline_run_id != ''
@@ -122,8 +123,8 @@ jobs:
       build_variant_label: ${{ fromJSON(inputs.build_config).build_variant_label }}
       build_variant_cmake_preset: ${{ fromJSON(inputs.build_config).build_variant_cmake_preset }}
       build_variant_suffix: ${{ fromJSON(inputs.build_config).build_variant_suffix }}
-      prebuilt_stages: ${{ fromJSON(inputs.build_config).prebuilt_stages }}
-      rebuild_artifacts: ${{ fromJSON(inputs.build_config).rebuild_artifacts }}
+      prebuilt_stages: ${{ github.repository_owner == 'ROCm' && fromJSON(inputs.build_config).prebuilt_stages || '' }}
+      rebuild_artifacts: ${{ github.repository_owner == 'ROCm' && fromJSON(inputs.build_config).rebuild_artifacts || '' }}
       skip_stages: ${{ fromJSON(inputs.build_config).skip_stages }}
       build_runs_on_large: ${{ fromJSON(inputs.build_config).build_runs_on_large }}
       build_runs_on_small: ${{ fromJSON(inputs.build_config).build_runs_on_small }}
@@ -382,6 +383,7 @@ jobs:
       ref: ${{ inputs.ref }}
     permissions:
       contents: read
+      actions: read
       id-token: write
 
   test_python_packages_per_family:

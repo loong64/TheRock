@@ -205,6 +205,7 @@ jobs:
       changed_projects: ${{ inputs.changed_projects || '' }}
     permissions:
       contents: read
+      actions: read
       id-token: write
 
   windows_build_and_test:

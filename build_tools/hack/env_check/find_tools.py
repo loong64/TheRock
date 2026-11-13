@@ -446,6 +446,8 @@ class FindGCC(FindProgram):
                 return "ARM"
             case "aarch64-linux-gnu":
                 return "ARM64"
+            case "loongarch64-anolis-linux":
+                return "LoongArch64"
             case "riscv64-linux-gnu":
                 return "RISC-V 64"
             case "riscv32-linux-gnu":
@@ -491,6 +493,8 @@ class FindGXX(FindProgram):
                 return "ARM"
             case "aarch64-linux-gnu":
                 return "ARM64"
+            case "loongarch64-anolis-linux":
+                return "LoongArch64"
             case "riscv64-linux-gnu":
                 return "RISC-V 64"
             case "riscv32-linux-gnu":
@@ -535,6 +539,8 @@ class FindGFortran(FindProgram):
                 return "ARM"
             case "aarch64-linux-gnu":
                 return "ARM64"
+            case "loongarch64-anolis-linux":
+                return "LoongArch64"
             case "riscv64-linux-gnu":
                 return "RISC-V 64"
             case "riscv32-linux-gnu":

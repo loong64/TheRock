@@ -65,7 +65,7 @@ on:
       windows_amdgpu_families:
         description: 'Windows GPU families to build (comma-separated, or "all"/"none")'
         type: string
-        default: "all"
+        default: "none"
 
 permissions:
   contents: read
@@ -232,9 +232,9 @@ jobs:
       build_variant_label: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_variant_label }}
       build_variant_cmake_preset: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_variant_cmake_preset }}
       build_variant_suffix: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_variant_suffix }}
-      build_runs_on_large: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_large }}
-      build_runs_on_small: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_small }}
-      build_runs_on_medium: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_medium }}
+      build_runs_on_large: "debian-13-loong64"
+      build_runs_on_small: "debian-13-loong64"
+      build_runs_on_medium: "debian-13-loong64"
       rocm_package_version: ${{ needs.setup-linux.outputs.rocm_package_version }}
       release_type: dev
       repository: ${{ github.repository }}
@@ -254,13 +254,14 @@ jobs:
       platform: linux
       package_version: ${{ needs.setup-linux.outputs.rocm_package_version }}
       release_type: dev
-      build_runs_on: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_large }}
+      build_runs_on: "debian-13-loong64"
       repository: ${{ github.repository }}
       ref: ${{ needs.setup-linux.outputs.ref }}
 
   build-linux-python-packages:
     permissions:
       contents: read
+      actions: read # Download build artifacts from a workflow run.
       id-token: write # Authenticate to AWS for build artifacts and publication.
     name: Build Linux Python Packages
     needs: [create-branch, setup-linux, build-linux]
@@ -274,7 +275,7 @@ jobs:
       windows_amdgpu_families: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).windows_amdgpu_families }}
       package_version: ${{ needs.setup-linux.outputs.rocm_package_version }}
       release_type: dev
-      build_runs_on: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_medium }}
+      build_runs_on: "debian-13-loong64"
       repository: ${{ github.repository }}
       ref: ${{ needs.setup-linux.outputs.ref }}
 
@@ -294,7 +295,7 @@ jobs:
       native_package_type: deb
       release_type: dev
       build_variant: release
-      build_runs_on: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_small }}
+      build_runs_on: "debian-13-loong64"
       repository: ${{ github.repository }}
       ref: ${{ needs.setup-linux.outputs.ref }}
 
@@ -314,7 +315,7 @@ jobs:
       native_package_type: rpm
       release_type: dev
       build_variant: release
-      build_runs_on: ${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_small }}
+      build_runs_on: "debian-13-loong64"
       repository: ${{ github.repository }}
       ref: ${{ needs.setup-linux.outputs.ref }}
 
@@ -379,7 +380,7 @@ jobs:
               "run_full_pytorch_tests": "false",
               "ref": "${{ needs.create-branch.outputs.branch_name }}",
               "python_version": "3.12,3.13,3.14",
-              "build_runs_on": "${{ fromJSON(needs.setup-linux.outputs.linux_build_config).build_runs_on_large }}"
+              "build_runs_on": "debian-13-loong64"
             }
 
   # JAX wheels - triggered after Linux Python packages are published

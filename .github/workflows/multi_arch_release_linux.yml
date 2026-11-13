@@ -140,6 +140,7 @@ jobs:
       quartz_tracking_id: ${{ inputs.quartz_tracking_id }}
     permissions:
       contents: read
+      actions: read # Download build artifacts from a workflow run.
       id-token: write
 
   build_native_deb_packages:

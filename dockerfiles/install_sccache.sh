@@ -12,17 +12,20 @@ set -euo pipefail
 SCCACHE_VERSION="$1"
 
 ARCH="$(uname -m)"
-if [ "${ARCH}" != "x86_64" ]; then
-    echo "Unsupported architecture: ${ARCH}. Only x86_64 is supported."
-    exit 1
-fi
-SCCACHE_ARCH="x86_64-unknown-linux-musl"
-
+case "${ARCH}" in
+    x86_64) SCCACHE_REPO="mozilla/sccache" ;;
+    loongarch64) SCCACHE_REPO="loong64/sccache" ;;
+    *) echo "Unsupported architecture: ${ARCH}" >&2; exit 1 ;;
+esac
+SCCACHE_ARCH="${ARCH}-unknown-linux-musl"
 SCCACHE_TARBALL="sccache-v${SCCACHE_VERSION}-${SCCACHE_ARCH}.tar.gz"
-SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/${SCCACHE_TARBALL}"
+SCCACHE_URL="https://github.com/${SCCACHE_REPO}/releases/download/v${SCCACHE_VERSION}/${SCCACHE_TARBALL}"
 case "${SCCACHE_VERSION}:${SCCACHE_ARCH}" in
     0.14.0:x86_64-unknown-linux-musl)
         SCCACHE_SHA256="8424b38cda4ecce616a1557d81328f3d7c96503a171eab79942fad618b42af44"
+        ;;
+    0.14.0:loongarch64-unknown-linux-musl)
+        SCCACHE_SHA256="35b6065e7e2fcc88b55dc157ec2bf5dfdb6a81c1df2484f8a2a8f05e0daa78cb"
         ;;
     *)
         echo "Unsupported sccache version/architecture: ${SCCACHE_VERSION}/${SCCACHE_ARCH}" >&2

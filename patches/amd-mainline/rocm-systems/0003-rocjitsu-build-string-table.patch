@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?B?5ZC05bCP55m9?= <296015668@qq.com>
+Date: Fri, 13 Nov 2026 20:28:47 +0800
+Subject: [PATCH] rocjitsu: fix building string table
+
+---
+diff --git a/emulation/rocjitsu/tests/dbt/support/gfx1250_test_code_object.h b/emulation/rocjitsu/tests/dbt/support/gfx1250_test_code_object.h
+index 7d45ed0eda8..ac3741f43fb 100644
+--- a/emulation/rocjitsu/tests/dbt/support/gfx1250_test_code_object.h
++++ b/emulation/rocjitsu/tests/dbt/support/gfx1250_test_code_object.h
+@@ -22,8 +22,8 @@ inline uint64_t align_up(uint64_t value, uint64_t alignment) {
+ 
+ inline uint32_t add_name(std::vector<uint8_t> &table, std::string_view name) {
+   const uint32_t offset = static_cast<uint32_t>(table.size());
+-  table.insert(table.end(), name.begin(), name.end());
+-  table.push_back('\0');
++  table.resize(table.size() + name.size() + 1);
++  std::memcpy(table.data() + offset, name.data(), name.size());
+   return offset;
+ }
+ 
