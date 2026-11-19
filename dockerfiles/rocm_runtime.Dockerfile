@@ -202,8 +202,8 @@
 #     rocm-nightly:ubuntu24.04-gfx110X-7.11.0a20251211 rocminfo
 
 # Base image selection
-ARG BASE_IMAGE=ubuntu:24.04
-FROM ${BASE_IMAGE}
+ARG BASE_IMAGE=debian:trixie
+FROM ghcr.io/loong64/${BASE_IMAGE}
 
 # ROCm configuration arguments
 ARG VERSION

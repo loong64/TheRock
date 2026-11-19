@@ -9,6 +9,13 @@ therock_subproject_fetch(therock-yaml-cpp-sources
   PATCH_COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build_tools/patch_third_party_source.py ${CMAKE_SOURCE_DIR}/patches/third-party/yaml-cpp
 )
 
+# Keep exception tables with their functions when GCC objects are linked by
+# LLD on loongarch64.
+set(_yaml_cpp_arch_args)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+  list(APPEND _yaml_cpp_arch_args "-DCMAKE_CXX_FLAGS=-ffunction-sections -fdata-sections")
+endif()
+
 therock_cmake_subproject_declare(therock-yaml-cpp
   USE_DIST_AMDGPU_TARGETS
   BACKGROUND_BUILD
@@ -19,6 +26,7 @@ therock_cmake_subproject_declare(therock-yaml-cpp
   BUILD_DEPS
     therock-fmt
   CMAKE_ARGS
+    ${_yaml_cpp_arch_args}
     -DYAML_BUILD_SHARED_LIBS=OFF
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 )

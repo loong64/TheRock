@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?B?5ZC05bCP55m9?= <296015668@qq.com>
+Date: Fri, 13 Nov 2026 20:28:47 +0800
+Subject: [PATCH] Recognize Anolis LoongArch GCC
+
+---
+diff --git a/clang/lib/Driver/ToolChains/Gnu.cpp b/clang/lib/Driver/ToolChains/Gnu.cpp
+index 8a15e218bd28..cb2d0fc39d0c 100644
+--- a/clang/lib/Driver/ToolChains/Gnu.cpp
++++ b/clang/lib/Driver/ToolChains/Gnu.cpp
+@@ -2413,7 +2413,8 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
+ 
+   static const char *const LoongArch64LibDirs[] = {"/lib64", "/lib"};
+   static const char *const LoongArch64Triples[] = {
+-      "loongarch64-linux-gnu", "loongarch64-unknown-linux-gnu"};
++      "loongarch64-linux-gnu", "loongarch64-unknown-linux-gnu",
++      "loongarch64-anolis-linux"};
+ 
+   static const char *const M68kLibDirs[] = {"/lib"};
+   static const char *const M68kTriples[] = {"m68k-unknown-linux-gnu",

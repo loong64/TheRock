@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Fri, 20 Nov 2026 00:00:00 +0000
+Subject: [PATCH] LoongArch: legalize 32-bit multiply-high results on LA64
+
+---
+--- a/llvm/lib/Target/LoongArch/LoongArchISelLowering.cpp
++++ b/llvm/lib/Target/LoongArch/LoongArchISelLowering.cpp
+@@ -170,6 +170,7 @@
+   if (Subtarget.is64Bit()) {
+     setOperationAction(ISD::ADD, MVT::i32, Custom);
+     setOperationAction(ISD::SUB, MVT::i32, Custom);
++    setOperationAction({ISD::MULHS, ISD::MULHU}, MVT::i32, Custom);
+     setOperationAction(ISD::SHL, MVT::i32, Custom);
+     setOperationAction(ISD::SRA, MVT::i32, Custom);
+     setOperationAction(ISD::SRL, MVT::i32, Custom);
+@@ -5401,6 +5402,20 @@
+            "Unexpected custom legalisation");
+     Results.push_back(customLegalizeToWOpWithSExt(N, DAG));
+     break;
++  case ISD::MULHS:
++  case ISD::MULHU: {
++    assert(VT == MVT::i32 && Subtarget.is64Bit() &&
++           "Unexpected custom legalisation");
++    unsigned Extend = N->getOpcode() == ISD::MULHS ? ISD::SIGN_EXTEND
++                                                   : ISD::ZERO_EXTEND;
++    SDValue LHS = DAG.getNode(Extend, DL, MVT::i64, N->getOperand(0));
++    SDValue RHS = DAG.getNode(Extend, DL, MVT::i64, N->getOperand(1));
++    SDValue Product = DAG.getNode(ISD::MUL, DL, MVT::i64, LHS, RHS);
++    SDValue High = DAG.getNode(ISD::SRL, DL, MVT::i64, Product,
++                               DAG.getConstant(32, DL, MVT::i64));
++    Results.push_back(DAG.getNode(ISD::TRUNCATE, DL, MVT::i32, High));
++    break;
++  }
+   case ISD::SDIV:
+   case ISD::UDIV:
+   case ISD::SREM:
+--- /dev/null
++++ b/llvm/test/CodeGen/LoongArch/lsx/promote-mulh-i32.ll
+@@ -0,0 +1,15 @@
++; RUN: llc -mtriple=loongarch64 -mattr=+lsx < %s | FileCheck %s
++
++; CHECK-LABEL: signed_remainder:
++define <2 x i32> @signed_remainder(<2 x double> %a) {
++  %b = fptosi <2 x double> %a to <2 x i32>
++  %c = srem <2 x i32> %b, splat (i32 13)
++  ret <2 x i32> %c
++}
++
++; CHECK-LABEL: unsigned_remainder:
++define <2 x i32> @unsigned_remainder(<2 x double> %a) {
++  %b = fptoui <2 x double> %a to <2 x i32>
++  %c = urem <2 x i32> %b, splat (i32 13)
++  ret <2 x i32> %c
++}
+-- 
+2.39.5

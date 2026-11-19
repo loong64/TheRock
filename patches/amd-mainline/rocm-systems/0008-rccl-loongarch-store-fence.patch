@@ -1,0 +1,25 @@
+From 59ab6c1e9c232dd61c1ec169873062cce9cb230c Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 13:22:10 +0800
+Subject: [PATCH] RCCL: support LoongArch write-combining fence
+
+---
+ projects/rccl/src/include/gdrwrap.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/projects/rccl/src/include/gdrwrap.h b/projects/rccl/src/include/gdrwrap.h
+index 162373be19a..b7135745200 100644
+--- a/projects/rccl/src/include/gdrwrap.h
++++ b/projects/rccl/src/include/gdrwrap.h
+@@ -40,7 +40,7 @@ static inline void wc_store_fence(void) { asm volatile("sync" : : : "memory"); }
+ #elif defined(__x86_64__) || (defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64)))
+ #include <immintrin.h>
+ static inline void wc_store_fence(void) { _mm_sfence(); }
+-#elif defined(__aarch64__) || defined(__riscv)
++#elif defined(__aarch64__) || defined(__riscv) || defined(__loongarch_lp64)
+ #ifdef __cplusplus
+ #include <atomic>
+ static inline void wc_store_fence(void) { std::atomic_thread_fence(std::memory_order_release); }
+-- 
+2.47.3
+

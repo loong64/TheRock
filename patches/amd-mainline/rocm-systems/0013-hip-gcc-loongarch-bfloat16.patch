@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 00:00:00 +0000
+Subject: [PATCH] HIP: use portable bfloat16 conversion with LoongArch GCC
+
+---
+--- a/projects/clr/hipamd/include/hip/amd_detail/amd_hip_bf16_gcc.h
++++ b/projects/clr/hipamd/include/hip/amd_detail/amd_hip_bf16_gcc.h
+@@ -9,7 +9,7 @@
+ 
+ #include "amd_hip_fp16.h"
+ 
+-#if __GNUC__ >= 13
++#if __GNUC__ >= 13 && !defined(__loongarch__)
+ #define HIP_GNUC_BF16_TYPE 1
+ #else
+ #define HIP_GNUC_BF16_TYPE 0
+-- 
+2.39.5

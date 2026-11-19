@@ -8,6 +8,13 @@ therock_subproject_fetch(therock-googletest-sources
   URL_HASH SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
 )
 
+# GCC on loongarch64 otherwise emits exception tables that LLD cannot link
+# when COMDAT sections are discarded by test executables.
+set(_googletest_arch_args)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+  list(APPEND _googletest_arch_args "-DCMAKE_CXX_FLAGS=-ffunction-sections -fdata-sections")
+endif()
+
 therock_cmake_subproject_declare(therock-googletest
   USE_DIST_AMDGPU_TARGETS
   BACKGROUND_BUILD
@@ -17,6 +24,7 @@ therock_cmake_subproject_declare(therock-googletest
   EXTERNAL_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/source"
   CMAKE_ARGS
     -Dgtest_force_shared_crt=ON
+    ${_googletest_arch_args}
 )
 therock_cmake_subproject_provide_package(therock-googletest GTest lib/cmake/GTest)
 therock_cmake_subproject_activate(therock-googletest)
