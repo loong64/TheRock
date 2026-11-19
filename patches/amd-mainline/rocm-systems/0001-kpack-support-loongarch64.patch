@@ -1,0 +1,64 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?B?5ZC05bCP55m9?= <296015668@qq.com>
+Date: Fri, 13 Nov 2026 20:28:47 +0800
+Subject: [PATCH] kpack: support loongarch64
+
+---
+diff --git a/shared/kpack/python/rocm_kpack/elf/types.py b/shared/kpack/python/rocm_kpack/elf/types.py
+index b25f0d36a8c..6193413a119 100644
+--- a/shared/kpack/python/rocm_kpack/elf/types.py
++++ b/shared/kpack/python/rocm_kpack/elf/types.py
+@@ -22,6 +22,7 @@ ELF_MAGIC = b"\x7fELF"
+ # ELF machine types (e_machine)
+ EM_X86_64 = 62
+ EM_PPC64 = 21
++EM_LOONGARCH = 258
+ 
+ # ELF header offsets (for direct byte access)
+ E_IDENT_OFFSET = 0
+@@ -106,6 +107,7 @@ R_X86_64_RELATIVE = 8  # Used for PIE/shared library pointer adjustments
+ 
+ # Relocation types (ppc64le)
+ R_PPC64_RELATIVE = 22  # Used for PIE/shared library pointer adjustments
++R_LARCH_RELATIVE = 3
+ 
+ # Dynamic section tags (d_tag)
+ DT_NULL = 0
+@@ -582,6 +584,7 @@ class ArchConfig:
+ _ARCH_CONFIGS: dict[int, ArchConfig] = {
+     EM_X86_64: ArchConfig(page_size=0x1000, r_relative=R_X86_64_RELATIVE),
+     EM_PPC64: ArchConfig(page_size=0x10000, r_relative=R_PPC64_RELATIVE),
++    EM_LOONGARCH: ArchConfig(page_size=0x10000, r_relative=R_LARCH_RELATIVE),
+ }
+ 
+ def get_arch_config(e_machine: int) -> ArchConfig:
+diff --git a/shared/kpack/tests/elf/test_types.py b/shared/kpack/tests/elf/test_types.py
+index a3573248a4f..c4feffef6ed 100644
+--- a/shared/kpack/tests/elf/test_types.py
++++ b/shared/kpack/tests/elf/test_types.py
+@@ -9,6 +9,8 @@ from rocm_kpack.elf.types import (
+     R_X86_64_RELATIVE,
+     R_X86_64_64,
+     EM_X86_64,
++    EM_LOONGARCH,
++    R_LARCH_RELATIVE,
+ )
+ 
+ 
+@@ -113,6 +115,14 @@ class TestRelaEntryTargetAddress:
+ 
+ 
+ class TestArchConfig:
++    def test_loongarch64_config(self):
++        config = get_arch_config(EM_LOONGARCH)
++        assert EM_LOONGARCH == 258
++        assert config.page_size == 0x10000
++        assert config.r_relative == R_LARCH_RELATIVE == 3
++        rela = RelaEntry(r_offset=0x1000, r_info=RelaEntry.make_info(sym=0, type_=R_LARCH_RELATIVE), r_addend=0x5000)
++        assert rela.targets_range(0x5000, 0x1000, r_relative=config.r_relative)
++
+     """Tests for ArchConfig and get_arch_config()."""
+ 
+     def test_x86_64_config(self):
+-- 
+2.39.5

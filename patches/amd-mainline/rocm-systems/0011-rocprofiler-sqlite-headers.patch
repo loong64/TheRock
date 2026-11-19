@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 00:00:00 +0000
+Subject: [PATCH] rocprofiler: use upstream SQLite no-link interface
+
+Backport the upstream no-link interface so SQLite include paths reach
+the output library and Python bindings without adding a link dependency.
+
+---
+diff --git a/projects/rocprofiler-sdk/cmake/rocprofiler_interfaces.cmake b/projects/rocprofiler-sdk/cmake/rocprofiler_interfaces.cmake
+index 94fa8da8391..c102ffe4db5 100644
+--- a/projects/rocprofiler-sdk/cmake/rocprofiler_interfaces.cmake
++++ b/projects/rocprofiler-sdk/cmake/rocprofiler_interfaces.cmake
+@@ -116,3 +116,6 @@ rocprofiler_add_nolink_interface_library(
+ rocprofiler_add_nolink_interface_library(
+     rocprofiler-sdk-hipfile-nolink "hipFILE headers without linking to hipFILE library"
+     IMPORTED)
++rocprofiler_add_nolink_interface_library(
++    rocprofiler-sdk-sqlite3-nolink "SQLite3 headers without linking to SQLite3 library"
++    IMPORTED)
+diff --git a/projects/rocprofiler-sdk/external/CMakeLists.txt b/projects/rocprofiler-sdk/external/CMakeLists.txt
+index a86f0ecefab..0e4a2426cd8 100644
+--- a/projects/rocprofiler-sdk/external/CMakeLists.txt
++++ b/projects/rocprofiler-sdk/external/CMakeLists.txt
+@@ -4,6 +4,7 @@
+ #
+ #
+ include(rocprofiler_utilities)
++include(rocprofiler_config_nolink_target)
+ 
+ cmake_policy(PUSH)
+ cmake_policy(SET CMP0077 NEW) # option() honors normal variables
+@@ -289,6 +290,8 @@ else()
+     find_package(SQLite3 REQUIRED)
+     target_link_libraries(rocprofiler-sdk-sqlite3 INTERFACE SQLite::SQLite3)
+ endif()
++rocprofiler_config_nolink_target(rocprofiler-sdk-sqlite3-nolink
++                                 rocprofiler-sdk::rocprofiler-sdk-sqlite3)
+ 
+ #
+ # PyBind11
+diff --git a/projects/rocprofiler-sdk/source/lib/output/CMakeLists.txt b/projects/rocprofiler-sdk/source/lib/output/CMakeLists.txt
+index 4231c414cbc..4f892c59628 100644
+--- a/projects/rocprofiler-sdk/source/lib/output/CMakeLists.txt
++++ b/projects/rocprofiler-sdk/source/lib/output/CMakeLists.txt
+@@ -66,6 +66,7 @@ target_link_libraries(
+     rocprofiler-sdk-output-library
+     PUBLIC rocprofiler-sdk::rocprofiler-sdk-rocpd-library
+            rocprofiler-sdk::rocprofiler-sdk-aqlprofile
++           rocprofiler-sdk::rocprofiler-sdk-sqlite3-nolink
+     PRIVATE rocprofiler-sdk::rocprofiler-sdk-headers
+             rocprofiler-sdk::rocprofiler-sdk-build-flags
+             rocprofiler-sdk::rocprofiler-sdk-memcheck
+-- 
+2.39.5

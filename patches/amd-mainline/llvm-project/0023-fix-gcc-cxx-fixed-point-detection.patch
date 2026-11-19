@@ -1,0 +1,30 @@
+From c9f7455ef6cd6793269d5155cb13e56d7bf0ef15 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 13:13:18 +0800
+Subject: [PATCH] libc: avoid detecting GCC fixed-point types in C++
+
+---
+ libc/include/llvm-libc-macros/stdfix-macros.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/libc/include/llvm-libc-macros/stdfix-macros.h b/libc/include/llvm-libc-macros/stdfix-macros.h
+index 04097e14e974..c496fd8cbc71 100644
+--- a/libc/include/llvm-libc-macros/stdfix-macros.h
++++ b/libc/include/llvm-libc-macros/stdfix-macros.h
+@@ -9,10 +9,11 @@
+ #ifndef LLVM_LIBC_MACROS_STDFIX_MACROS_H
+ #define LLVM_LIBC_MACROS_STDFIX_MACROS_H
+ 
+-#ifdef __FRACT_FBIT__
++#if defined(__FRACT_FBIT__) && (!defined(__cplusplus) || defined(__clang__))
++// GCC may define fixed-point macros in C++ without supporting the types.
+ // _Fract and _Accum types are available
+ #define LIBC_COMPILER_HAS_FIXED_POINT
+-#endif // __FRACT_FBIT__
++#endif // fixed-point types available
+ 
+ #ifdef LIBC_COMPILER_HAS_FIXED_POINT
+ 
+-- 
+2.47.3
+

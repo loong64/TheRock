@@ -26,6 +26,10 @@ case "${ARCH}" in
         RUSTUP_TARGET="aarch64-unknown-linux-gnu"
         RUSTUP_SHA256="9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792"
         ;;
+    loongarch64)
+        RUSTUP_TARGET="loongarch64-unknown-linux-gnu"
+        RUSTUP_SHA256="09c3b7b029daeb4a51a2a39fc2330344baa11da71763b66ea72c0cae12a44240"
+        ;;
     *)
         echo "Unsupported rustup-init architecture: ${ARCH}" >&2
         exit 1

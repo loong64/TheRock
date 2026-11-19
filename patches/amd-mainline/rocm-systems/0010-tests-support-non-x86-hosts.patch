@@ -1,0 +1,87 @@
+From a088e609ac51253ecc520112619890e31dc6ede9 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 16:45:42 +0800
+Subject: [PATCH] tests: support non-x86 hosts in OpenCL and aqlprofile
+
+---
+ projects/aqlprofile/test/util/perf_timer.cpp           | 10 +++++++---
+ projects/aqlprofile/test/util/perf_timer.h             |  2 ++
+ .../tests/ocltst/module/perf/OCLPerfKernelThroughput.h |  1 -
+ 3 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/projects/aqlprofile/test/util/perf_timer.cpp b/projects/aqlprofile/test/util/perf_timer.cpp
+index 577e9a73a33..590cfa81ae5 100644
+--- a/projects/aqlprofile/test/util/perf_timer.cpp
++++ b/projects/aqlprofile/test/util/perf_timer.cpp
+@@ -67,7 +67,7 @@ int PerfTimer::StartTimer(int index) {
+ #endif
+ #else
+ // General Linux timing method
+-#ifndef _AMD
++#if !defined(_AMD) || (!defined(__i386__) && !defined(__x86_64__))
+   struct timeval s;
+   gettimeofday(&s, 0);
+   timers_[index]->start = s.tv_sec * 1.0E3 + ((double)(s.tv_usec / 1.0E3));
+@@ -98,7 +98,7 @@ int PerfTimer::StopTimer(int index) {
+ 
+ #else
+ // General Linux timing method
+-#ifndef _AMD
++#if !defined(_AMD) || (!defined(__i386__) && !defined(__x86_64__))
+   struct timeval s;
+   gettimeofday(&s, 0);
+   n = s.tv_sec * 1.0E3 + (double)(s.tv_usec / 1.0E3);
+@@ -112,7 +112,7 @@ int PerfTimer::StopTimer(int index) {
+   n -= timers_[index]->start;
+   timers_[index]->start = 0;
+ 
+-#ifndef _AMD
++#if !defined(_AMD) || (!defined(__i386__) && !defined(__x86_64__))
+   timers_[index]->clocks += n;
+ #else
+   // timers_[index]->clocks += 10 * n / freq_in_100mhz_; // unit is ns
+@@ -158,6 +158,7 @@ uint64_t PerfTimer::CoarseTimestampUs() {
+ }
+ 
+ uint64_t PerfTimer::MeasureTSCFreqHz() {
++#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+   // Make a coarse interval measurement of TSC ticks for 1 gigacycles.
+   unsigned int unused;
+   uint64_t tscTicksEnd;
+@@ -174,4 +175,7 @@ uint64_t PerfTimer::MeasureTSCFreqHz() {
+   uint64_t coarseIntervalNs = (coarseEndUs - coarseBeginUs) * 1000;
+   uint64_t tscIntervalTicks = tscTicksEnd - tscTicksBegin;
+   return (tscIntervalTicks * 10 + (coarseIntervalNs / 2)) / coarseIntervalNs;
++#else
++  return 0;  // The generic timer does not use the x86 TSC.
++#endif
+ }
+diff --git a/projects/aqlprofile/test/util/perf_timer.h b/projects/aqlprofile/test/util/perf_timer.h
+index 0c2953e888d..7db689ed81a 100644
+--- a/projects/aqlprofile/test/util/perf_timer.h
++++ b/projects/aqlprofile/test/util/perf_timer.h
+@@ -38,7 +38,9 @@
+ #else
+ #if defined(__GNUC__)
+ #include <sys/time.h>
++#if defined(__i386__) || defined(__x86_64__)
+ #include <x86intrin.h>
++#endif
+ #endif  // __GNUC__
+ #endif  // _MSC_VER
+ 
+diff --git a/projects/clr/opencl/tests/ocltst/module/perf/OCLPerfKernelThroughput.h b/projects/clr/opencl/tests/ocltst/module/perf/OCLPerfKernelThroughput.h
+index b23ada56fb3..bf703d1f07c 100644
+--- a/projects/clr/opencl/tests/ocltst/module/perf/OCLPerfKernelThroughput.h
++++ b/projects/clr/opencl/tests/ocltst/module/perf/OCLPerfKernelThroughput.h
+@@ -31,7 +31,6 @@
+ #define UNSIGNED_LARGE_INT unsigned long long
+ #define MAX_LOOP_ITER 10
+ typedef cl_float4 float4;
+-typedef void (*CPUKernel)(__m128*, __m128*, unsigned int);
+ 
+ class OCLPerfKernelThroughput : public OCLTestImp {
+  public:
+-- 
+2.47.3
+

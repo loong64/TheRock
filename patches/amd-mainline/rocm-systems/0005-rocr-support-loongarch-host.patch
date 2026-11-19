@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 00:00:00 +0000
+Subject: [PATCH] ROCr: support LoongArch host synchronization
+
+---
+diff --git a/projects/rocr-runtime/runtime/hsa-runtime/core/util/locks.h b/projects/rocr-runtime/runtime/hsa-runtime/core/util/locks.h
+index 133dd06f0b7..391deb7d4f6 100644
+--- a/projects/rocr-runtime/runtime/hsa-runtime/core/util/locks.h
++++ b/projects/rocr-runtime/runtime/hsa-runtime/core/util/locks.h
+@@ -72,7 +72,11 @@ class HybridMutex {
+     while (!lock_.compare_exchange_strong(old, 1)) {
+       cnt--;
+       if (cnt > maxSpinIterPause) {
++#if defined(__loongarch_lp64)
++        os::YieldThread();
++#else
+         _mm_pause();
++#endif
+       } else if (cnt-- > maxSpinIterYield) {
+         os::YieldThread();
+       } else {
+diff --git a/projects/rocr-runtime/runtime/hsa-runtime/core/util/utils.h b/projects/rocr-runtime/runtime/hsa-runtime/core/util/utils.h
+index f6b06d3a463..95b79903a31 100644
+--- a/projects/rocr-runtime/runtime/hsa-runtime/core/util/utils.h
++++ b/projects/rocr-runtime/runtime/hsa-runtime/core/util/utils.h
+@@ -71,6 +71,17 @@
+ #endif
+ #if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+ #include "intrin.h"
++#elif defined(__loongarch_lp64)
++// See linux-kernel arch/loongarch/include/asm/barrier.h
++// full barrier-mb
++static inline void _mm_clflush(const void* ptr) { (void)ptr; asm volatile ("dbar 0" ::: "memory"); }
++// sfence->wmb->c_wsync->c_w_w
++// LoongArch barrier:  c_w_w completion previous(W) succeeding(W)
++static inline void _mm_sfence(void) { asm volatile ("dbar 0xa" ::: "memory"); }
++// mfence->mb->c_sync->crwrw
++// LoongArch barrier:  crwrw completion previous(R/W) succeeding(R/W)
++static inline void _mm_mfence(void) { asm volatile ("dbar 0" ::: "memory"); }
++static inline void _mm_pause(void) {}
+ #endif
+ 
+ namespace rocr {
+diff --git a/projects/rocr-runtime/runtime/hsa-runtime/image/util.h b/projects/rocr-runtime/runtime/hsa-runtime/image/util.h
+index 18f4a11ba9f..7e9aeb78764 100644
+--- a/projects/rocr-runtime/runtime/hsa-runtime/image/util.h
++++ b/projects/rocr-runtime/runtime/hsa-runtime/image/util.h
+@@ -74,8 +74,8 @@ namespace image {
+ 
+ 
+ #if defined(__GNUC__)
+-#include "mm_malloc.h"
+ #if defined(__i386__) || defined(__x86_64__)
++#include "mm_malloc.h"
+ #include <x86intrin.h>
+ #elif defined(__loongarch64)
+ #else
+-- 
+2.39.5

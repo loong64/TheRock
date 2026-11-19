@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 00:00:00 +0000
+Subject: [PATCH] Recognize loongarch64 host
+
+---
+diff --git a/cmake/config.guess b/cmake/config.guess
+index 9da67244a..a703db941 100644
+--- a/cmake/config.guess
++++ b/cmake/config.guess
+@@ -863,6 +863,9 @@ EOF
+     i*86:Minix:*:*)
+ 	echo ${UNAME_MACHINE}-pc-minix
+ 	exit ;;
++    loongarch64:Linux:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
+     aarch64*:Linux:*)
+ 	    echo ${UNAME_MACHINE}-unknown-linux-gnu
+ 	exit ;;
+-- 
+2.39.5

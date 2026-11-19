@@ -1,0 +1,36 @@
+diff --git a/build-aux/config.guess b/build-aux/config.guess
+index f50dcdb..c771a21 100755
+--- a/build-aux/config.guess
++++ b/build-aux/config.guess
+@@ -897,6 +897,9 @@ EOF
+     i*86:Minix:*:*)
+ 	echo "$UNAME_MACHINE"-pc-minix
+ 	exit ;;
++    loongarch64:Linux:*:*)
++	echo "$UNAME_MACHINE"-unknown-linux-"$LIBC"
++	exit ;;
+     aarch64:Linux:*:*)
+ 	echo "$UNAME_MACHINE"-unknown-linux-"$LIBC"
+ 	exit ;;
+diff --git a/build-aux/config.sub b/build-aux/config.sub
+index 1d8e98b..ac48897 100755
+--- a/build-aux/config.sub
++++ b/build-aux/config.sub
+@@ -300,7 +300,7 @@ case $basic_machine in
+ 	| powerpc | powerpc64 | powerpc64le | powerpcle \
+ 	| pru \
+ 	| pyramid \
+-	| riscv32 | riscv64 \
++	| loongarch64 | riscv32 | riscv64 \
+ 	| rl78 | rx \
+ 	| score \
+ 	| sh | sh[1234] | sh[24]a | sh[24]aeb | sh[23]e | sh[234]eb | sheb | shbe | shle | sh[1234]le | sh3ele \
+@@ -428,7 +428,7 @@ case $basic_machine in
+ 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
+ 	| pru-* \
+ 	| pyramid-* \
+-	| riscv32-* | riscv64-* \
++	| loongarch64-* | riscv32-* | riscv64-* \
+ 	| rl78-* | romp-* | rs6000-* | rx-* \
+ 	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
+ 	| shle-* | sh[1234]le-* | sh3ele-* | sh64-* | sh64le-* \

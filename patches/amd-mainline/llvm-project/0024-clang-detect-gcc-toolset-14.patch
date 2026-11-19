@@ -1,0 +1,24 @@
+From c8b96a4e5c81a00609d3db43b68ebac4ef928a92 Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 16:17:38 +0800
+Subject: [PATCH] clang: discover GCC toolset 14 on Linux
+
+---
+ clang/lib/Driver/ToolChains/Gnu.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/clang/lib/Driver/ToolChains/Gnu.cpp b/clang/lib/Driver/ToolChains/Gnu.cpp
+index a165e7200ce7..4c1446c52770 100644
+--- a/clang/lib/Driver/ToolChains/Gnu.cpp
++++ b/clang/lib/Driver/ToolChains/Gnu.cpp
+@@ -2345,6 +2345,7 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
+       D.getVFS().exists("/opt/rh")) {
+     // TODO: We may want to remove this, since the functionality
+     //   can be achieved using config files.
++    Prefixes.push_back("/opt/rh/gcc-toolset-14/root/usr");
+     Prefixes.push_back("/opt/rh/gcc-toolset-13/root/usr");
+     Prefixes.push_back("/opt/rh/gcc-toolset-12/root/usr");
+     Prefixes.push_back("/opt/rh/gcc-toolset-11/root/usr");
+-- 
+2.47.3
+

@@ -1,0 +1,49 @@
+From da20955d7fb463e292f51ebbd1d618517fe5079e Mon Sep 17 00:00:00 2001
+From: TheRock contributors <therockbot@amd.com>
+Date: Thu, 19 Nov 2026 13:22:30 +0800
+Subject: [PATCH] RCCL: support GDR flush reads on LoongArch
+
+---
+ projects/rccl/src/transport/coll_net.cc | 6 +++++-
+ projects/rccl/src/transport/net.cc      | 6 +++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/projects/rccl/src/transport/coll_net.cc b/projects/rccl/src/transport/coll_net.cc
+index fbbab902a2a..5da850fc124 100644
+--- a/projects/rccl/src/transport/coll_net.cc
++++ b/projects/rccl/src/transport/coll_net.cc
+@@ -1258,8 +1258,12 @@ static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct
+ #if defined(__x86_64__)
+               // Force a PCI-E read from GPU memory
+               asm volatile("mov (%0), %%eax" ::"l"(resources->gdcFlush) : "%eax", "memory");
++#elif defined(__loongarch_lp64)
++              // Order the completion queue poll before the PCIe read.
++              std::atomic_thread_fence(std::memory_order_seq_cst);
++              (void)*reinterpret_cast<volatile uint64_t*>(resources->gdcFlush);
+ #else
+-              WARN("NET: GDR Flush only supported on x86_64");
++              WARN("NET: GDR Flush only supported on x86_64 and loongarch64");
+               return ncclInternalError;
+ #endif
+             } else {
+diff --git a/projects/rccl/src/transport/net.cc b/projects/rccl/src/transport/net.cc
+index f086ad9f902..1260ac711e5 100644
+--- a/projects/rccl/src/transport/net.cc
++++ b/projects/rccl/src/transport/net.cc
+@@ -2087,8 +2087,12 @@ static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct
+                 once = false;
+                 INFO(NCCL_INIT, "%s: issued GDC flush", __func__);
+               }
++#elif defined(__loongarch_lp64)
++              // Order the completion queue poll before the PCIe read.
++              std::atomic_thread_fence(std::memory_order_seq_cst);
++              (void)*reinterpret_cast<volatile uint64_t*>(resources->gdcFlush);
+ #else
+-              WARN("NET: GDR Flush only supported on x86_64");
++              WARN("NET: GDR Flush only supported on x86_64 and loongarch64");
+               return ncclInternalError;
+ #endif
+             } else {
+-- 
+2.47.3
+
